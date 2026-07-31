@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Academy — The $0 Phone Flipping Course</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:#fcfcfb; --surface-2:#f1f1ef; --card:#ffffff;
+    --ink:#0b0b0b; --sub:#52514e; --muted:#8a897f;
+    --accent:#2a78d6; --accent-soft:#e8f0fb; --good:#008300; --good-soft:#e6f2e6;
+    --bad:#e34948; --bad-soft:#fdeaea; --gold:#c98500; --gold-soft:#fdf3e0; --line:#e3e2dd;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    color-scheme: dark;
+    --surface-1:#1a1a19; --surface-2:#232322; --card:#242423;
+    --ink:#ffffff; --sub:#c3c2b7; --muted:#8a897f;
+    --accent:#3987e5; --accent-soft:#20304a; --good:#3aa53a; --good-soft:#1e2f1e;
+    --bad:#e66767; --bad-soft:#3a2222; --gold:#c98500; --gold-soft:#332a15; --line:#3a3a38;
+  }}
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface-1); color:var(--ink); line-height:1.55; padding-bottom:70px; }
+  .wrap { max-width:780px; margin:0 auto; padding:16px; }
+  .topbar { position:sticky; top:0; background:var(--surface-1); border-bottom:1px solid var(--line); z-index:10; }
+  .topbar .wrap { display:flex; align-items:center; gap:12px; padding:10px 16px; }
+  .brand { font-weight:800; font-size:16px; }
+  .rank { margin-left:auto; font-size:13px; font-weight:700; color:var(--gold); white-space:nowrap; }
+  .xpbarWrap { flex:1; max-width:220px; height:10px; background:var(--surface-2); border-radius:99px; overflow:hidden; }
+  .xpbar { height:100%; background:linear-gradient(90deg,var(--accent),var(--gold)); border-radius:99px; transition:width .4s; }
+  h1 { font-size:24px; margin:18px 0 4px; letter-spacing:-0.02em; }
+  h2 { font-size:18px; margin:8px 0; }
+  .sub2 { color:var(--sub); font-size:14px; margin-bottom:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; }
+  .modcard { display:flex; gap:12px; align-items:center; cursor:pointer; transition:transform .1s; }
+  .modcard:active { transform:scale(0.99); }
+  .modemoji { font-size:28px; }
+  .modtitle { font-weight:700; font-size:15px; }
+  .modmeta { font-size:12px; color:var(--muted); }
+  .donechip { margin-left:auto; font-size:12px; font-weight:700; color:var(--good); white-space:nowrap; }
+  .progress-sm { height:6px; background:var(--surface-2); border-radius:99px; overflow:hidden; margin-top:6px; }
+  .progress-sm div { height:100%; background:var(--accent); border-radius:99px; }
+  .btn { display:inline-block; background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer; margin-top:10px; }
+  .btn.ghost { background:var(--surface-2); color:var(--ink); border:1px solid var(--line); }
+  .btn.good { background:var(--good); }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .lesson { border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .lesson-head { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; background:var(--card); font-weight:600; font-size:14px; }
+  .lesson-head .tick { margin-left:auto; font-size:13px; }
+  .lesson-body { display:none; padding:4px 16px 14px; background:var(--card); font-size:14px; }
+  .lesson-body p { margin:10px 0; }
+  .lesson.open .lesson-body { display:block; }
+  .qq { font-weight:700; margin:14px 0 8px; font-size:15px; }
+  .opt { display:block; width:100%; text-align:left; background:var(--surface-2); border:2px solid var(--line);
+    border-radius:10px; padding:11px 13px; font-size:14px; margin:6px 0; cursor:pointer; color:var(--ink); font-family:inherit; }
+  .opt.correct { border-color:var(--good); background:var(--good-soft); }
+  .opt.wrong { border-color:var(--bad); background:var(--bad-soft); }
+  .why { border-left:3px solid var(--accent); padding:8px 12px; margin:10px 0; font-size:13px; color:var(--sub); background:var(--accent-soft); border-radius:0 8px 8px 0; display:none; }
+  .toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--surface-1);
+    padding:10px 18px; border-radius:99px; font-weight:700; font-size:14px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:99; }
+  .crumb { font-size:13px; color:var(--accent); cursor:pointer; font-weight:600; margin:14px 0 0; display:inline-block; }
+  .bignum { font-size:42px; font-weight:800; }
+  .examq { margin-bottom:4px; font-size:12px; color:var(--muted); }
+  .cert { border:6px double var(--gold); border-radius:8px; padding:34px 24px; text-align:center; background:var(--card); }
+  .cert h2 { font-size:26px; color:var(--gold); margin-bottom:4px; }
+  .cert .name { font-size:30px; font-weight:800; margin:14px 0 4px; }
+  .cert .line { width:60%; border-bottom:1px solid var(--ink); margin:30px auto 4px; }
+  .screen { display:none; } .screen.active { display:block; }
+  @media print { body * { visibility:hidden; } .cert, .cert * { visibility:visible; } .cert { position:absolute; top:20px; left:5%; width:90%; } }
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <span class="brand" onclick="go('home')" style="cursor:pointer">🎓 Flip Academy</span>
+  <div class="xpbarWrap"><div class="xpbar" id="xpbar"></div></div>
+  <span class="rank" id="rankTag"></span>
+</div></div>
+<div class="wrap">
+  <div id="screen-home" class="screen active"></div>
+  <div id="screen-mod" class="screen"></div>
+  <div id="screen-sim" class="screen"></div>
+  <div id="screen-exam" class="screen"></div>
+  <div id="screen-cert" class="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// FLIP ACADEMY course content — loaded by FlipAcademy.html
+const COURSE = [
+{ id:"m1", emoji:"💡", title:"Module 1 — How This Business Actually Works", lessons:[
+{ t:"Where the money comes from", h:`<p>Every used phone has <b>three prices</b>. The <b>retail price</b> — what a careful buyer pays on Swappa or eBay for a tested, guaranteed phone. The <b>convenience price</b> — what a random seller accepts to get cash <i>today</i> without shipping, waiting, or haggling with strangers. And the <b>wholesale price</b> — what bulk buyers and repair shops pay so THEY can profit reselling it.</p>
+<p>You make money living in the gap: you buy near the convenience price and sell near retail (more work) or wholesale (faster). The gap exists because <b>you provide a real service</b> — instant cash, showing up, taking the risk of testing and reselling. You're not tricking anyone. A seller with a cracked iPhone 13 doesn't want to learn Swappa, buy a shipping box, and wait 9 days. They want $150 today. You want the $110 spread after selling it for $260 wholesale. Both people win. Say that sentence to yourself before every deal — it's also your answer when a seller asks "why so low?"</p>
+<p><b>The core loop:</b> Find → Verify → Buy → (sometimes repair) → Sell → Log it → Repeat. Every module in this course drills one part of that loop.</p>` },
+{ t:"The real math (not guru math)", h:`<p>Guru math: "$100 a phone, 3 phones a day, $9,000 a month!" Real math has <b>four leaks</b> the gurus skip:</p>
+<p><b>1. Dead time.</b> For every deal you close, expect 5–10 conversations that go nowhere. Sellers ghost, phones fail verification, someone beat you to it. Budget the time.<br>
+<b>2. Costs per flip.</b> Gas, selling fees, packaging, the occasional part. $10–25 per phone vanishes here if you don't track it.<br>
+<b>3. Mistakes tax.</b> Everyone eats a bad flip eventually — overpaid, missed a fault, phone sat unsold for a month. Beginners: assume 1 in 10 flips earns roughly $0. Your log (Flip HQ) is how you learn from each one instead of repeating it.<br>
+<b>4. Capital limits.</b> With $500 float you can hold 2–4 phones. If they take 2 weeks to sell, your money is stuck — you can't buy the great deal that pops up Tuesday. This is why fast, lower-profit bulk sales are often smarter than slow, higher-profit retail sales <i>early on</i>.</p>
+<p><b>Honest targets:</b> Month 1: 4–8 flips, $150–$400 total profit while learning. Month 2–3: 10–20 flips, $500–$1,500. One-a-day pace ($2,000–$3,000/mo): a real possibility around month 3–6 <i>if</i> you treat it like a part-time job. Anyone promising faster is selling something.</p>` },
+{ t:"Your unfair advantages", h:`<p>Most people who try flipping quit in 3 weeks. Here's why you're set up differently:</p>
+<p><b>You've already run a business.</b> The trash-bin operation taught you the exact loop — find customers, deliver, collect, follow up. Flipping is the same loop with a different product.<br>
+<b>You have a system on day one.</b> Flip HQ + the Max Offer Calculator mean you'll know your numbers from flip #1. Most flippers figure out they're unprofitable in month 3. You'd know by Friday.<br>
+<b>You have rules that remove decisions.</b> Never exceed max offer. Never skip verification. Never meet outside safe zones. Rules mean no willpower needed at the moment of temptation — and the moment of temptation always comes disguised as a great deal.</p>
+<p>🎯 <b>Drill:</b> Before moving on, open Flip HQ's Max Offer tab and run these numbers: a phone that sells for $260 wholesale, $0 fees, $5 gas, $75 target. Your max offer should come out to $180. If you got that — you already operate better than half of YouTube.</p>` }],
+quiz:[
+{ q:"A seller lists a cracked iPhone 13 for $160. It wholesales at $260. Why might they take $140 cash from you within the hour?", opts:["They don't know what phones are worth","They're paying for speed, cash, and zero hassle — the convenience price","They're probably scamming you","Marketplace forces prices down"], a:1, why:"Sellers trade money for convenience. That service — instant, local, cash — is the legitimate reason the spread exists." },
+{ q:"With $500 float and phones taking 2 weeks to sell retail, what's the smartest early strategy?", opts:["Hold out for max retail profit on every phone","Buy more phones on credit","Sell faster at wholesale to keep cash moving, even at lower profit per phone","Stop buying until everything sells"], a:2, why:"Velocity beats margin when capital is small. Cash stuck in inventory can't chase the next deal." },
+{ q:"A realistic month-1 expectation is:", opts:["$3,000 profit","4–8 flips and $150–$400 while you learn","$100 profit per phone from flip #1","Break even at best"], a:1, why:"Month 1 is tuition. The goal is reps and clean verification habits, not a headline number." }]},
+
+{ id:"m2", emoji:"📱", title:"Module 2 — Know the Product Cold", lessons:[
+{ t:"The iPhone lineup cheat sheet", h:`<p>You need to identify any iPhone in 5 seconds and know roughly what it's worth. Anchor models (mid-2026 ballparks, good condition, unlocked — always re-check comps):</p>
+<p><b>iPhone 11 (2019)</b> — notch, dual camera, LCD. ~$100–140. Fading but still sells fast under $120.<br>
+<b>iPhone 12 / 12 Pro (2020)</b> — first flat-edge OLED. ~$150–220. Great beginner flip: cheap to buy, always in demand.<br>
+<b>iPhone 13 / 13 Pro (2021)</b> — smaller notch, big battery jump. ~$280–380. The volume king — everyone wants one.<br>
+<b>iPhone 14 / 14 Pro (2022)</b> — Pro gets Dynamic Island. ~$360–560. The 14 Pro is the current sweet spot: high demand, real margin.<br>
+<b>iPhone 15 / 15 Pro (2023)</b> — USB-C! ~$450–650. Margins good but buy-in is high — one mistake hurts.<br>
+<b>16/17 series</b> — too new; sellers want near-retail. Skip until you're experienced.</p>
+<p><b>Storage matters:</b> 64→128GB adds ~$20–40 to value; 256GB+ adds ~$30–60 more. <b>Check it:</b> Settings → General → About. Never price a phone without knowing storage.</p>
+<p><b>Quick ID trick:</b> Settings → General → About → Model Name. No pickup needed: flat edges + notch = 12/13 era; Dynamic Island = 14 Pro or newer; USB-C port = 15 or newer.</p>` },
+{ t:"Locks: the four ways a phone can be a brick", h:`<p>A phone's <i>hardware</i> can be perfect and the phone still worthless. Four locks, in order of danger:</p>
+<p><b>1. Activation Lock (iCloud) / FRP (Google).</b> Tied to the previous owner's account. If it's on, the phone is unusable to anyone else — and "unlock services" that claim otherwise are overwhelmingly scams or stolen-goods laundering. <i>Rule: the seller removes it in front of you or there is no deal.</i><br>
+<b>2. Blacklist (lost/stolen).</b> The IMEI is flagged with carriers; it can't activate on US networks. Shows up on IMEI checks. Often means the phone is stolen or an insurance claim was filed on it — walk, fast.<br>
+<b>3. Finance lock.</b> Phone isn't paid off. Works TODAY — then the carrier blacklists it in 3 weeks when payments stop, and your buyer comes back furious. This is the sneaky one: only a paid check (CheckMEND-style) or carrier check reveals it.<br>
+<b>4. Carrier lock.</b> Locked to AT&T/T-Mobile/Verizon. Phone works but only on that network — worth 10–20% less than unlocked. Not a dealbreaker; price it in. Check: Settings → General → About → Carrier Lock ("No SIM restrictions" = unlocked).</p>
+<p><b>Also know:</b> MDM lock (company-owned device — "Remote Management" screen at setup; walk away) and demo units (retail display phones; walk away).</p>` },
+{ t:"Grading and the 60-second inspection", h:`<p>The industry grades phones A/B/C/D. Learn to grade in one minute:</p>
+<p><b>Grade A</b> — looks new, no visible marks at arm's length. Full retail.<br>
+<b>Grade B</b> — light scratches you see on close inspection. ~10–15% off retail. Most phones you buy.<br>
+<b>Grade C</b> — cracked glass (front OR back), heavy wear, but fully working. 35–50% off retail. <i>Your bread and butter</i> — biggest discount for the smallest real problem.<br>
+<b>Grade D / parts</b> — doesn't power, logic board issues, no Face ID. Only worth parts value. Beginners: skip.</p>
+<p><b>The 60-second inspection, in order:</b> ① Power on, check for lines/spots/flicker on a white screen (open Notes). ② Battery Health (Settings → Battery): 85%+ good, below 80% budget a $50–70 battery or discount harder. ③ Cameras front/back — open the app, switch lenses, look for black dots or haze. ④ Face ID / Touch ID — have the seller set it up fresh and unlock once. ⑤ Speakers + mic — record a voice memo, play it back. ⑥ Charging port — plug in YOUR cable (bring one). ⑦ Buttons and mute switch. ⑧ Look for water indicators (SIM tray slot — red dot = water exposure, discount hard).</p>
+<p><b>Aftermarket screen tell:</b> iPhones show "Unable to verify this iPhone has a genuine Apple display" in Settings after a non-genuine screen swap. Not fatal — but that's a Grade B phone at best, and your buyer will check.</p>` },
+{ t:"Samsung & Android: the second market", h:`<p>iPhones move faster and hold value better — they should be 70–80% of your flips. But Samsung is worth knowing because <b>competition is thinner</b>:</p>
+<p><b>Galaxy S22/S23/S24</b> — the only Androids with iPhone-like liquidity. S23 ~$250–320, S24 ~$350–450. Depreciate faster than iPhones, so don't hold them — flip to bulk buyers quickly.<br>
+<b>Avoid as a beginner:</b> A-series and budget Androids (thin margins, slow sales), Pixels (niche demand), anything over 4 years old, tablets (slow), smartwatches (fine later, learn phones first).</p>
+<p><b>Android-specific checks:</b> FRP (Google lock) — after factory reset, the setup screen must NOT ask for a previous Google account. Knox warranty (Samsung) — tripped Knox kills trade-in value with some buyers. Same IMEI rules apply: dial *#06#.</p>
+<p>🎯 <b>Drill:</b> Open SellCell right now and look up: iPhone 13 128GB "good", iPhone 14 Pro "cracked screen", Galaxy S23 "good". Write the three wholesale numbers down. You just learned more real pricing than an hour of YouTube.</p>` }],
+quiz:[
+{ q:"A seller's iPhone 14 Pro works perfectly, but a paid IMEI check shows an outstanding finance balance. What happens if you buy it?", opts:["Nothing — it works fine","The carrier will likely blacklist it within weeks when payments stop","It only affects the seller's credit","You just can't use it on Verizon"], a:1, why:"Finance-locked phones become bricks AFTER the sale. This is the #1 sneaky loss for new flippers — only a financial-status check catches it." },
+{ q:"Which phone is the classic high-volume beginner flip?", opts:["iPhone 16 Pro Max","iPhone 13 with cracked glass, fully working (Grade C)","A $40 Android tablet","iPhone 8"], a:1, why:"Grade C on a high-demand model = biggest discount for the smallest real problem. 13s sell instantly at every level of the chain." },
+{ q:"During inspection, battery health reads 76%. You should:", opts:["Ignore it, batteries are all the same","Walk away immediately","Budget a battery replacement (~$50–70) or discount your offer accordingly","Pay full price but sell it fast"], a:2, why:"Below 80% is a real cost — either you fix it or your buyer discounts you. Either way it belongs in your max-offer math." },
+{ q:"At setup, the phone shows a 'Remote Management' screen. This means:", opts:["It needs an update","It's a company-owned MDM device — walk away","It's factory new","Normal for refurbished phones"], a:1, why:"MDM = enrolled in a company's device management. It can be remotely locked at any time and most buyers won't touch it." }]},
+
+{ id:"m3", emoji:"🛡️", title:"Module 3 — Verification Mastery (Never Buy a Brick)", lessons:[
+{ t:"IMEI: the phone's fingerprint", h:`<p>The IMEI is a unique 15-digit ID burned into the phone's hardware. Everything about a phone's history hangs off it: carrier records, blacklist status, finance status, insurance claims, even color/storage as manufactured.</p>
+<p><b>Get it three ways:</b> dial <b>*#06#</b> (works on everything), Settings → General → About, or the SIM tray etching. <b>Pro habit:</b> get the IMEI over chat BEFORE driving anywhere. "Can you send me the IMEI from Settings so I can verify it? Standard thing I do for every phone." Honest sellers send it in 2 minutes. Evasive sellers just saved you a trip.</p>
+<p><b>Free checks</b> (blacklist yes/no): Swappa's ESN checker, carrier prepay-eligibility pages. <b>Paid checks</b> ($1–3: CheckMEND, IMEI check services): blacklist + <b>finance status</b> + loss/theft claims + original model verification. <b>Rule of thumb:</b> free check for phones under $150; paid check for anything over $150 or any seller who feels off. A $2 check that kills a bad $300 buy just paid for 150 more checks.</p>
+<p><b>Verify the IMEI matches the phone:</b> the *#06# number must match the Settings number AND what the seller texted you. Mismatch = cloned or shady phone. Walk.</p>` },
+{ t:"The handoff protocol (do it in this exact order)", h:`<p>At the meetup, run this sequence <i>every single time</i>. It takes 6–8 minutes and it is the entire difference between a professional and a mark:</p>
+<p><b>① Confirm the phone is the phone.</b> Dial *#06#, match the IMEI to what they sent you.<br>
+<b>② The 60-second hardware inspection</b> (Module 2). Use your own cable.<br>
+<b>③ Watch the accounts come off.</b> iPhone: Settings → [their name] → Sign Out (they type their password — never you), then confirm Find My is OFF, then Settings → General → Transfer or Reset → Erase All Content. Watch it reboot to the "Hello" screen and get PAST setup with no activation-lock prompt. Android: factory reset, get past setup with no Google-account prompt (FRP clear).<br>
+<b>④ Paperwork.</b> Photo of their ID next to the phone. Both sign the bill of sale (Flip HQ prints it). Ask the magic question out loud: "And this is paid off, off your account, and yours to sell, right?" — watch their face.<br>
+<b>⑤ Then and only then, money changes hands.</b> Count it visibly.</p>
+<p><b>If the seller rushes you at any step</b> ("I'm in a hurry, it's fine, I'll sign out later") — that IS the red flag. The deal dies politely: "No worries — I can only buy phones I watch get signed out. Text me if you want to meet again." Half the time they suddenly find the time.</p>` },
+{ t:"Reading sellers: green flags and red flags", h:`<p><b>Green flags 🟢</b> — knows the phone's history ("my daughter's, we upgraded"), has the box or receipt, patient with verification, meets at your safe zone without complaint, price is low-but-sane (60–80% of value — convenience discount), asks reasonable questions about you.</p>
+<p><b>Yellow flags 🟡</b> (proceed with extra care) — brand-new Marketplace profile, won't voice-call, story details drift, "selling for my cousin" (the cousin's ID and signature or no deal), price notably below even convenience level.</p>
+<p><b>Red flags 🔴</b> (walk, always) — won't send IMEI before meeting, wants to meet at night / their car / odd location, phone is still signed into an account they "forgot," IMEI mismatch, multiple phones in original boxes at half price (fell off a truck — literally), pushes you to skip "all that checking stuff," gets angry at the ID photo.</p>
+<p><b>The uncomfortable truth:</b> the best-sounding deal you'll see this month is the most likely to be stolen. Price discipline protects your wallet; verification discipline protects your record. You need both.</p>` }],
+quiz:[
+{ q:"The correct moment for money to change hands is:", opts:["When you first see the phone works","After the IMEI check but before the wipe","After IMEI match + inspection + watched sign-out/wipe + signed receipt","50% before, 50% after"], a:2, why:"Every step happens BEFORE payment. Once cash moves, all your leverage is gone." },
+{ q:"Seller says: 'I'm in a rush — I'll sign out of iCloud when I get home, I promise.' You:", opts:["Trust them, they seem nice","Pay half now, half after they sign out","Politely end the deal — an unsigned-out phone is a brick with a promise attached","Take $10 off the price"], a:2, why:"An activation-locked phone is worthless regardless of promises. This exact line is how flippers get burned." },
+{ q:"Best use of a $2 paid IMEI check:", opts:["Every phone including $40 junkers","Never — free checkers show everything","Phones over ~$150 or any seller who trips a yellow flag","Only iPhones"], a:2, why:"Free checks show blacklist but usually NOT finance status. On bigger buys, the $2 covers the sneaky risk." },
+{ q:"A seller has three iPhone 15s, sealed in boxes, at half retail. This is:", opts:["A great bulk opportunity","Almost certainly stolen or fraud inventory — walk away","Fine if their ID matches","Normal clearance behavior"], a:1, why:"Sealed multiples below market is the classic stolen/fraud pattern. No legitimate story produces this deal for a stranger on Marketplace." }]},
+
+{ id:"m4", emoji:"🔍", title:"Module 4 — Sourcing: Winning the Find", lessons:[
+{ t:"Marketplace: how the fast money is made", h:`<p>Facebook Marketplace is 60–70% of most flippers' volume. The winners share one trait: <b>speed</b>. Good deals get 15+ messages in the first hour; the phone usually goes to the first solid, normal-sounding person.</p>
+<p><b>Setup (once):</b> Save searches for "iPhone 12", "iPhone 13", "iPhone 14", "broken iPhone", "cracked iPhone", "iPhone for parts", "Galaxy S23" within 20 miles. Turn on notifications for each (tap the bell). Check manually at 7–8am (listings posted overnight) and 6–9pm (posted after work).</p>
+<p><b>The first message wins deals.</b> Never send "Is this available?" — everyone sends that. Send: <i>"Hey! I can pick up today with cash. Would you take $__? Also could you send the IMEI from Settings so I can verify? Quick and easy."</i> Concrete offer + today + cash + one easy ask. That message closes deals at 9pm the same night.</p>
+<p><b>Reading listings for hidden value:</b> bad photos and vague titles ("iphone good condition") = less competition saw it. Listings up 5+ days = seller is tired; offers 20% under ask get accepted. "Upgrade" mentioned = phone is probably fine, they just want it gone.</p>` },
+{ t:"The other five channels", h:`<p><b>OfferUp</b> — smaller than FB but buyers are less savvy and flipper competition is thinner. Same playbook. <b>Craigslist</b> — old-school; still real volume in Houston metro, and sellers skew older with better-kept phones.<br>
+<b>Your own 'I buy phones' listing</b> — post on FB Marketplace AND as a weekly post in Magnolia/Woodlands community groups: "Buying iPhones & Samsungs — any condition, cracked fine — cash same day, we meet at the police station safe exchange." Renew weekly. This flips the funnel: sellers come to YOU, and they're pre-sold on your process.<br>
+<b>Repair shops</b> — walk in, introduce yourself: "If someone wants to sell instead of fix, text me — $10 every time it turns into a buy." Two shop relationships = a lead machine.<br>
+<b>Pawn shops</b> — they buy at 30–40% of value; sellers they turn down walk out the door with a phone and no cash. Ask the counter guy to hand out your number. Also scan their case — pawn shops misprice phones in both directions.<br>
+<b>Garage/estate sales</b> — ask "any old phones or electronics in a drawer?" at every one. Old iPhones bought for $20 that wholesale at $80 are common. Estate sales are gold: nobody knows what the drawer phone is worth.</p>` },
+{ t:"Ads: the $10/day question, answered properly", h:`<p>The gurus lead with ads because ads scale — and because "just run ads" sounds easier than hustling Marketplace. Here's the adult version:</p>
+<p><b>Don't touch ads until:</b> 10+ profitable organic flips, a known average profit, and $1,000+ float. Ads produce leads; leads without float and skill produce expensive conversations.</p>
+<p><b>When you're ready:</b> Meta ad account in a parent's name (18+ requirement). Creative that works: a plain photo of cash + phones beats polished graphics; copy = "We buy iPhones — cracked, broken, whatever. Cash today. The Woodlands/Magnolia." Target 15 miles, all adults. Start at $10/day.</p>
+<p><b>The only two numbers that matter:</b> Cost Per Lead (spend ÷ people who message with a real phone) and Cost Per Buy (spend ÷ phones actually bought). If a bought phone costs $30 in ads and your average profit is $85, ads print money — scale to $20/day. If Cost Per Buy exceeds ~40% of average profit after two weeks, kill the ads and go back to organic. Write both numbers in Flip HQ weekly. No feelings, just math.</p>` }],
+quiz:[
+{ q:"The highest-converting first message to a seller includes:", opts:["'Is this still available?'","'What's your lowest price?'","A concrete offer + cash + today + a request for the IMEI","A long introduction about your business"], a:2, why:"Concrete, fast, and easy to say yes to — while pre-screening the phone before you drive." },
+{ q:"A listing has been up 6 days with blurry photos and a vague title. This suggests:", opts:["The phone is stolen","Less competition found it, and the seller is likely tired — good target for an under-ask offer","It's overpriced junk","Nothing useful"], a:1, why:"Bad listings hide good deals. Stale + poorly presented = motivated seller and thin competition." },
+{ q:"When should ads enter the picture?", opts:["Day one — that's how the pros start","After ~10 profitable organic flips, $1,000+ float, and known average profit","Never, ads don't work","Only for selling phones, not buying"], a:1, why:"Ads amplify a working system. Run them before you have one and you pay to practice." }]},
+
+{ id:"m5", emoji:"🤝", title:"Module 5 — Negotiation & People Skills", lessons:[
+{ t:"The five moves that do all the work", h:`<p><b>1. Comp-anchor:</b> never argue opinions, cite facts. "Sold listings show these going for about $260 working — with the cracked back, wholesale on it is around $200, so I can do $150 cash." You're not lowballing; you're reading the market out loud.<br>
+<b>2. Cash on the table (figuratively):</b> "I've got the cash on me and can meet in the next hour." Immediacy is worth $20–40 to most sellers — that's the discount you're buying.<br>
+<b>3. Silence:</b> make your offer, then stop talking. The first person to speak after a number usually moves. Count to ten in your head.<br>
+<b>4. The reason-why counter:</b> when they counter high, your reply always has a reason: "I get it — but I still have to resell it, cover the cracked back, and take the risk if something's off. $160 is where it works." Reasons make numbers feel fair instead of stingy.<br>
+<b>5. The warm walk-away:</b> "No worries at all — if it doesn't sell this week, text me. My number stands." A third of walk-aways come back within 48 hours, and they come back ready to accept.</p>
+<p><b>Never do:</b> trash the phone to justify your price (insults kill deals), negotiate against yourself (never raise your own offer without a counter), or blow your max (the calculator's number IS the number).</p>` },
+{ t:"Scripts for the four common sellers", h:`<p><b>The Researcher</b> ("eBay says it's worth $320"): "Totally right — retail, tested, with returns accepted and seller fees paid, shipped. I'm paying cash in an hour with none of that on you. That's why cash offers run lower. $180 work?"<br>
+<b>The Sentimentalist</b> ("I paid $800 for this"): never argue with the past. "They're great phones — they just depreciate fast, like cars. Today's market on this one is around $200. I can do $170 cash."<br>
+<b>The In-a-Hurry</b> ("Need it gone today, rent's due"): be fair, not predatory — you want a clean deal and your reputation compounds in a small town. Offer your normal max, close fast, be kind. These sellers refer their friends.<br>
+<b>The Shark</b> (counters hard, knows values): decide fast whether a deal exists at your max. If yes, get there in one move: "Straight up: $210 is my ceiling, cash right now." If no: warm walk-away. Never grind pennies with a shark; your hour is worth more at the next deal.</p>
+<p>🎯 <b>Practice this out loud</b> — actually out loud, to your dad, five times each. Scripts you've said before come out smooth under pressure. Scripts you've only read come out shaky.</p>` }],
+quiz:[
+{ q:"You offer $150. The seller goes quiet and looks at the phone. You should:", opts:["Immediately offer $165","Explain your reasoning again in more detail","Stay silent and let the offer sit","Start walking away"], a:2, why:"Silence after a number is pressure. Whoever breaks it usually concedes. Count to ten." },
+{ q:"Seller: 'I paid $800 for this phone!' Best response:", opts:["'That was a ripoff'","'Phones depreciate like cars — today's market on this one is about $200; I can do $170 cash'","'Then keep it'","'I'll do $400 then'"], a:1, why:"Empathy + market reality + concrete offer. Never argue with what they paid; it's irrelevant and it's emotional." },
+{ q:"Your calculator says max $180. The seller won't budge from $210. You:", opts:["Pay $210 — only $30 over","Split the difference at $195","Warm walk-away: leave your number and let the listing age","Trash the phone's condition until they cave"], a:2, why:"The max is the max — that discipline IS the business. A third of walk-aways call back, and the ones that don't were bad deals." }]},
+
+{ id:"m6", emoji:"🔧", title:"Module 6 — Repairs, Parts & When Not to Bother", lessons:[
+{ t:"The repair decision tree", h:`<p>The question is never "can it be fixed?" — it's "does fixing it beat selling it as-is?" Run every repair through this: <b>repair cost + your time + risk of botching it < value gained?</b></p>
+<p><b>Usually worth it:</b> ✅ Battery swaps on high-value models ($25–40 part, 30–60 min, adds $40–80 of value and makes phones sell faster). ✅ Screens on 13/14/15-era phones IF you use quality parts and the phone was cheap enough. ✅ Back glass via a local shop ($40–80) when the spread supports it.</p>
+<p><b>Usually NOT worth it:</b> ❌ Anything logic-board level (no power, no image, boot loops) — that's microsoldering, a real profession. Sell as parts. ❌ Face ID repairs — the hardware is paired to the board; aftermarket "fixes" are unreliable. Price dead Face ID phones as heavily discounted and disclose it. ❌ Water damage — it works today, dies in a month, and your buyer remembers you. Parts price only, always disclosed.</p>
+<p><b>The outsourcing cheat code:</b> you don't have to fix anything. A repair-shop relationship gets you trade pricing (screens $60–90 installed vs $120+ retail). Buy a cracked 14 Pro at $320, pay the shop $85, sell at $520 — you did zero repairs and cleared $115. The shop wins too; that's why they'll keep doing it.</p>` },
+{ t:"Parts quality (what those letters mean)", h:`<p>If you do start repairing: parts come in tiers, and the tier decides whether your buyer is happy or back at your door.</p>
+<p><b>OEM / original pulls</b> — screens pulled from other real iPhones. Best quality, most expensive. <b>"OEM refurbished"</b> — original glass re-laminated. Very good. <b>Aftermarket "incell" / "hard OLED" / "soft OLED"</b> — third-party manufactured, in ascending quality. Incell LCDs on an OLED phone look noticeably worse (dimmer, worse color, battery drain) — fine for a cheap phone, insulting on a 14 Pro.</p>
+<p><b>Two honest rules:</b> ① Match part quality to phone tier — soft OLED or better on anything 13+. ② <b>Disclose aftermarket parts when you sell.</b> "Screen replaced with quality aftermarket part" in the listing. It costs you $15 in price and buys you zero disputes, zero returns, and a reputation. iPhones also self-report non-genuine parts in Settings, so buyers find out anyway — be the seller who told them first.</p>
+<p><b>Tools if you go hands-on:</b> a $30 iFixit-style kit, a $15 heat pad, and the model's iFixit guide open on another screen. First attempt: a junk phone you bought for $20, not inventory.</p>` }],
+quiz:[
+{ q:"A phone won't power on at all. The repair play is:", opts:["Watch YouTube and try a board repair","Replace the battery and hope","Sell it as a parts phone — board-level work is a profession, not a flip","Throw it away"], a:2, why:"No-power is usually board-level. Parts buyers pay real money for these; your time is better spent flipping working phones." },
+{ q:"The 'outsourcing cheat code' means:", opts:["Having your buyer do repairs","Using a repair shop at trade pricing so you profit from repairs without doing them","Shipping phones overseas","Only buying working phones"], a:1, why:"Buy broken at broken prices, pay a shop trade rates, sell fixed. Margin without a repair bench." },
+{ q:"You replaced a screen with a good aftermarket part. When selling you should:", opts:["Say nothing — it looks fine","Claim it's original","Disclose it in the listing","Only mention it if asked"], a:2, why:"iPhones self-report non-genuine displays, and disputes cost more than the $15 disclosure discount. Reputation compounds." }]},
+
+{ id:"m7", emoji:"💰", title:"Module 7 — Selling: Squeezing the Most From Every Phone", lessons:[
+{ t:"Channel math: where each phone should go", h:`<p>Each phone has a best exit. Decide BEFORE you buy (that's what the calculator's fee field is for):</p>
+<p><b>Bulk buyers / buyback</b> (SellCell-compared, GreenBuyBack, local shops) — instant, zero fees, zero risk, ~60–75% of retail. Best for: fast cash, Grade C/D, Samsung, your first 10 flips.<br>
+<b>Swappa</b> — ~3% fee, real prices, buyers are technical and low-drama. Requires: fully working, clean IMEI (they verify), decent photos. Best for: clean Grade A/B iPhones. Usually your highest net.<br>
+<b>eBay</b> — biggest audience, ~13% fees, and buyer-protection games (Module 8). Best for: parts phones, odd models, locked-carrier phones — things Swappa won't list.<br>
+<b>Local (Marketplace)</b> — zero fees, cash, but you're meeting strangers again, now as the seller. Best for: mid-range phones where fees would sting. Same safe-zone rules apply in reverse.</p>
+<p><b>The pro pattern:</b> price your buy against the BULK number (guaranteed exit), then try retail first for 5–7 days. Retail bite → bonus profit. No bite → bulk it and move on. Never let a phone sit past two weeks; stale inventory is frozen float.</p>` },
+{ t:"Listings that sell in 48 hours", h:`<p><b>Photos (do this exactly):</b> natural window light, plain background (white table/poster board). Shots: front on, back, all four edges, screen ON with white background, Settings About page, battery health page. 7–9 photos. Photograph the damage close-up and honestly — hiding a crack earns a return, showing it earns trust.</p>
+<p><b>Title formula:</b> Model + storage + carrier status + condition + honest hook. "iPhone 13 128GB Unlocked — 88% battery, minor scratches, works perfectly."</p>
+<p><b>Description skeleton:</b> what it is → honest condition ("light scratches on frame, screen flawless") → battery health number → "IMEI clean, verified — happy to send it" → what's included → "cash, meet at police station safe exchange" (local) or ships next-day (online).</p>
+<p><b>Pricing:</b> find the three lowest comparable listings; price 5% under the lowest. Speed beats squeezing $15. If no bites in 5 days: drop 7%. Two drops with no bites = bulk it.</p>
+<p><b>Handoff discipline (selling local):</b> you verify the CASH like they should verify the phone — count it, big bills checked with a $6 counterfeit pen. Meet at the safe zone. Never take Zelle/Venmo from strangers (Module 8 explains why).</p>` }],
+quiz:[
+{ q:"Your clean iPhone 14 hasn't sold on Swappa in 12 days after one price drop. You should:", opts:["Hold firm — someone will pay","Drop the price again and wait two more weeks","Bulk it and free the cash — stale inventory is frozen float","Part it out"], a:2, why:"Two weeks is the ceiling. The $25 extra you might squeeze costs you the deals you can't fund meanwhile." },
+{ q:"The right way to photograph a cracked back is:", opts:["Angle the shots so it barely shows","Skip photos of the back","Close-up, well-lit, honest — with the damage in the description too","Photoshop it out"], a:2, why:"Disclosed damage builds trust and kills returns. Hidden damage guarantees an angry buyer with a refund case you'll lose." },
+{ q:"Best default exit for your first ten flips:", opts:["eBay auctions","Bulk buyers — instant, no fees, no disputes, while you learn","Holding for retail top dollar","Trading for other phones"], a:1, why:"Early on, speed and zero drama beat maximum margin. Learn the loop end-to-end, then chase retail spreads." }]},
+
+{ id:"m8", emoji:"🚨", title:"Module 8 — Scam Defense (The Module That Pays For Itself)", lessons:[
+{ t:"Buying-side scams", h:`<p><b>The switcheroo:</b> you inspect a real iPhone 14; while you count cash, it's swapped for a lookalike or a dummy. <i>Defense: the phone goes from THEIR hands to YOURS after verification and never back. Re-dial *#06# right before you hand over money.</i><br>
+<b>The clone:</b> Android phones in perfect iPhone bodies — fake iOS skin and all. <i>Defense: *#06# on the phone itself, match to Settings, open App Store (clones show Play Store or crash), feel the weight.</i><br>
+<b>The "forgot my password":</b> covered in Module 3 — it means "this isn't my phone." No exceptions, no matter how good the story.<br>
+<b>The financed-phone special:</b> works perfectly today, blacklisted in three weeks. <i>Defense: paid IMEI check on anything over $150.</i><br>
+<b>The remorse call:</b> a day later — "my mom says I had no right to sell it, give it back or I'll report it stolen." <i>Defense: your signed bill of sale + ID photo. Reply once, calmly: "I have a signed bill of sale and ID. The sale was legal and final." Then stop responding. This is exactly why the paperwork exists.</i></p>` },
+{ t:"Selling-side scams", h:`<p><b>The fake payment screenshot:</b> "I sent the Zelle, see?" — a doctored image. <i>Defense: money isn't real until it's in YOUR app, checked by YOU, on YOUR phone. Better: cash only from strangers.</i><br>
+<b>Zelle/Venmo reversal games:</b> payments from stolen accounts get clawed back weeks later — phone gone, money gone. <i>Defense: cash for local sales, period. A $6 counterfeit pen for big bills.</i><br>
+<b>PayPal Goods & Services abuse (eBay too):</b> buyer claims "item not as described" or "box was empty," wins the dispute, keeps the phone. <i>Defense: film yourself boxing the phone with the IMEI visible in one continuous shot; ship signature-required with insurance; keep every receipt. Platforms side with documented sellers far more often.</i><br>
+<b>The cousin pickup:</b> "My cousin will grab it and pay you." The cousin pays counterfeit or claims a different agreed price. <i>Defense: you deal with the buyer, in person, or nobody.</i><br>
+<b>The overpay:</b> "I'll send $600 for your $400 phone, just refund the difference" — the classic. The original payment is fraudulent; your "refund" is real money. <i>Defense: anyone overpaying is scamming. Always.</i></p>
+<p><b>Master rule for all of it:</b> scams need speed and pressure to work. Anyone rushing you — buying or selling — is either impatient (fine, they can wait 5 minutes) or a scammer (revealed). Slowness is your armor.</p>` }],
+quiz:[
+{ q:"A buyer shows you a Zelle 'payment sent' screenshot. The phone leaves your hand when:", opts:["The screenshot looks legit","They seem trustworthy","The money is visible in YOUR app on YOUR phone — or they pay cash","They offer to add $20"], a:2, why:"Screenshots are free to fake. Verified-in-your-app or cash. No third option exists." },
+{ q:"A seller calls the next day: 'Give the phone back or I'll report it stolen.' Your protection is:", opts:["Give it back to be safe","Your signed bill of sale + photo of their ID — reply once, calmly, then disengage","Block them immediately without replying","Offer them $20"], a:1, why:"This is the exact scenario the paperwork exists for. One calm factual reply, then silence. The law is on the documented party's side." },
+{ q:"An eBay buyer might claim your box arrived empty. Your best pre-emptive defense is:", opts:["Only selling locally forever","A continuous video of boxing the phone with IMEI visible + insured, signature-required shipping","Hoping for honest buyers","Small print in the listing"], a:1, why:"Documentation wins platform disputes. Thirty seconds of filming protects hundreds of dollars." },
+{ q:"Someone offers MORE than your asking price and wants the difference refunded. This is:", opts:["A generous buyer","Always a scam — the payment is fraudulent, your refund is real","Fine if they use PayPal","Negotiable"], a:1, why:"The overpay-refund is one of the oldest scams alive. Overpayment = instant block." }]},
+
+{ id:"m9", emoji:"📈", title:"Module 9 — Running It Like a Business", lessons:[
+{ t:"The weekly operating rhythm", h:`<p>Winging it works for a week; rhythm works for a year. The schedule that fits around school and the bin business:</p>
+<p><b>Daily (30–45 min):</b> morning saved-search sweep + replies (10 min). Evening sweep + booking meetups (15 min). Log everything in Flip HQ the moment it happens (2 min) — not Sunday, the moment.<br>
+<b>2–4 meetups per week</b>, batched by location when possible (two buys, one sale, one trip).<br>
+<b>Weekly review (Sunday, 20 min, with Dad early on):</b> open Flip HQ Summary. Four questions: What was profit this week? What's my average per phone — rising or falling? What's sitting unsold past 10 days (bulk it)? What's one mistake I won't repeat? Write the answer to #4 down. That list becomes your real course.</p>
+<p><b>Cash discipline:</b> the float is the business — it never buys shoes. Profit splits three ways every week: <b>50% back into float</b> (until float hits ~$1,500), <b>20% tax envelope</b> (untouchable), <b>30% yours</b>. When float is fat enough, flip the ratio and pay yourself more. Written down, agreed with Dad, followed even when — especially when — there's a good deal begging for the tax envelope's money.</p>` },
+{ t:"Taxes, legitimacy, and the long game", h:`<p><b>Taxes, plainly:</b> flipping profit is self-employment income. Over $400/year of net profit = the IRS expects a return (Schedule C). Your Flip HQ log IS the record an accountant needs: dates, costs, sales, profit. Texas adds no state income tax. The 20% envelope means April is boring instead of terrifying. Have a tax preparer confirm the details — ten minutes, once.</p>
+<p><b>Structure at 17:</b> accounts (Meta ads, PayPal, bulk-buyer accounts) sit in a parent's name; the operation is yours. At 18: your own accounts, and if volume is real (~$1,500+/mo profit), a cheap Texas LLC + separate bank account. Not before — early LLCs are paperwork cosplay.</p>
+<p><b>The reputation asset:</b> in a town like Magnolia, after 50 clean flips YOU become the known phone guy. Sellers message you first. Buyers pay your price because your phones are always verified and as-described. That reputation is worth more than any ad budget — and it's built one boring, honest, fully-documented deal at a time.</p>
+<p><b>And the exit thinking:</b> this skill stack — sourcing, verifying value, negotiating, moving inventory, keeping books — transfers to cars, sneakers, equipment, real estate wholesaling, anything. Phones are the training ground with $150 stakes instead of $15,000 ones. Master the loop here.</p>` }],
+quiz:[
+{ q:"Weekly profit was $300. Float is still under $1,500. The split is:", opts:["$300 to yourself — you earned it","$150 float / $60 tax envelope / $90 yours","All $300 back into buying phones","$100 each to float, taxes, and savings"], a:1, why:"50/20/30 until the float matures. The tax envelope is untouchable — yes, even for a 'can't-miss' deal." },
+{ q:"A phone has sat unsold for 11 days. Sunday review says:", opts:["Relist and wait another week","Drop 5% and hope","Bulk it — free the float","Keep it as your personal phone"], a:2, why:"Past ten days, the cash matters more than the margin. Frozen float is the silent killer of small operations." },
+{ q:"When does an LLC make sense?", opts:["Before the first flip","At 18+ with consistent real profit (~$1,500+/mo)","Never for reselling","Only if you hire employees"], a:1, why:"Legal structure follows real volume. Before that it's cost and paperwork with no benefit." }]},
+];
+
+// Scenario simulators
+const SCENARIOS = [
+{ id:"s1", emoji:"🛡️", title:"Simulator A — The Meetup Gauntlet", intro:"Eight sellers. Some are gold, some are landmines. Make the call on each one. (Scored — these count toward your rank.)",
+steps:[
+{ text:"Seller has an iPhone 13, $150, cracked back. Before meeting, you ask for the IMEI. Reply: 'Why do you need that?? Just come see it, it works fine.'", opts:["Explain once, calmly, that you verify every phone — if they refuse, pass","Drive out anyway — $150 for a 13 is too good","Offer $130 since they're being difficult"], a:0, why:"One calm explanation is fair — some sellers genuinely don't know. Refusal after that is a red flag that just saved you a trip." },
+{ text:"At the meetup, *#06# shows an IMEI ending 4471. The one they texted you ends 8823.", opts:["Ask them about it and accept a reasonable story","Walk. IMEI mismatch means it's not the phone you verified","Run a new check on the spot and buy if clean"], a:1, why:"A mismatch means the verified phone and the present phone are different devices. Whatever the story, the deal is dead — re-checking on the spot under pressure is how mistakes happen." },
+{ text:"Phone checks out. Seller signs out of iCloud, wipes it, you watch the Hello screen come up clean. They get a call and say 'sorry, gotta run — can we skip the receipt thing?'", opts:["Let it slide — the phone's already verified clean","'Takes 60 seconds — sign here, quick photo of your ID, and cash is yours.' If no: no deal","Pay them $10 less instead of the receipt"], a:1, why:"The receipt matters most in exactly the situations where someone doesn't want to give one. 60 seconds or no deal — said kindly, firmly." },
+{ text:"Different day: a seller offers a sealed iPhone 15, 'unwanted upgrade,' $380 (half retail). Profile is 2 weeks old.", opts:["Jackpot — buy before someone else does","Meet, and buy only if it opens and verifies clean","Pass. New profile + sealed + half price = fraud pattern; no verification protects you from a phone reported stolen tomorrow"], a:2, why:"Sealed means unverifiable. Half-price sealed from a fresh profile is the fraud/theft trifecta — even a clean check today can blacklist next week." },
+{ text:"A dad is selling his daughter's iPhone 12, $110, brings the original box, chats about her upgrade, has zero problem with your checks and jokes he'll 'sign whatever.'", opts:["All green flags — verify, do paperwork, buy it","Offer $80 since he's easygoing","Rush it since he's clearly legit"], a:0, why:"This is the green-flag seller. You still run the FULL protocol — good process on easy deals is what makes it automatic on hard ones. And don't punish nice with a lowball; fair deals build the referral machine." },
+{ text:"Seller's iPhone 14 checks clean on free blacklist checkers. Price is $280. Do you pay for the $2 full check?", opts:["No — free check said clean","Yes — over $150, the paid check covers finance status the free ones miss","Only if the seller seems shady"], a:1, why:"Free checkers usually miss finance locks — the sneaky brick. Over $150, the $2 check is mandatory process, not vibes-based." },
+{ text:"Everything verified, cash counted... and the seller says 'actually, I want $20 more, gas prices man.' Your max offer has $0 slack.", opts:["Pay it — you're already here","'I get it — but $180 was the deal and it's my ceiling. Still good?' Hold. Walk if no","Counter with $10 more"], a:1, why:"The last-second bump is a test. Most sellers fold when you hold calmly — and if not, your max exists for a reason. Sunk time is not a reason to lose money." },
+{ text:"Final one: 9pm, dark parking lot behind a gas station, seller 'can't do daytime, has the best deal you've seen this month.'", opts:["Bring your dad and go","Ask to move to the police station safe zone tomorrow; if no, pass — no phone is worth it","Go but stay in the car"], a:1, why:"Deal quality never overrides safety rules. A legit seller can meet at a safe zone in daylight. 'Best deal, worst conditions' is a mugging setup." }]},
+{ id:"s2", emoji:"🤝", title:"Simulator B — The Negotiation Table", intro:"Live negotiation reps. Your calculator says MAX $170 on this cracked-back iPhone 13 listed at $220.",
+steps:[
+{ text:"Opening message. Which one?", opts:["'Is this available?'","'Would you take $120?'","'Hey! Can pick up today with cash. Sold listings run ~$260 working — with the cracked back I can do $150. Could you send the IMEI so I can verify? Quick and easy.'"], a:2, why:"Anchor below max with a reason, signal speed and cash, pre-screen with the IMEI ask. One message does four jobs." },
+{ text:"Seller: 'lol $150?? I can get $200 easy.'", opts:["'OK, $200 then.'","'Maybe so! Cash today though, no waiting on maybes. I could stretch to $160.'","'Nobody will pay $200 for that.'"], a:1, why:"Acknowledge without agreeing, re-sell the convenience, move in a small step. Never insult, never jump to your ceiling." },
+{ text:"Seller: 'Meet me at $185 and it's yours today.'", opts:["Take it — only $15 over max","'I'm at $170 — that's genuinely my ceiling with the resale risk on me. Cash in an hour if that works.'","Split at $177.50"], a:1, why:"$15 over max is how $75 profit becomes $60, then $50 on the next one. State the ceiling with a reason and an easy yes attached." },
+{ text:"Silence for 4 hours. Then: 'someone else offered $190.'", opts:["'$195 and done.'","'Go for it — genuinely. If it falls through, my $170 cash stands. Good luck either way!'","'They're lying to you.'"], a:1, why:"Maybe real, maybe leverage. Either way: gracious, unbothered, offer intact. Phantom buyers evaporate; your standing cash doesn't." },
+{ text:"Next morning: 'fine, $170, can you come now?'", opts:["'Actually, $160 — you made me wait.'","'Deal — heading to the police station exchange spot. I'll verify IMEI and iCloud signout there, quick paperwork, cash in hand.'","'Let me think about it.'"], a:1, why:"Close cleanly at the agreed number — punishing the wait kills the deal and your reputation. Re-set the process expectations in the acceptance so nothing at the meetup is a surprise." },
+{ text:"At the meetup everything verifies. Battery health surprises you: 79% (you'd assumed 85%+). New battery costs you $30.", opts:["Eat it — deal's a deal","'One thing — battery's at 79%, that's a $30 fix on my end. Can we do $145, or I can still do $170 if you'd rather I skip it... but 79% is below what we discussed as \"works great.\"' Settle around $145–150","Walk away entirely"], a:1, why:"New information legitimately reopens price — calmly, with the number attached to a fact. Most sellers accept a fair adjustment on the spot; the alternative (over-paying knowingly) violates the calculator." }]}
+];
+
+const RANKS = [[0,"🥚 Rookie"],[80,"🔎 Scout"],[200,"⚙️ Operator"],[340,"🤝 Dealmaker"],[480,"👑 Flip Boss"]];
+const EXAM = [];
+COURSE.forEach(m => m.quiz.forEach(q => EXAM.push({...q, mod:m.title})));
+
+
+// ---------- state ----------
+let mem=null;
+function load(){ try{ const r=localStorage.getItem('flipacademy'); if(r) return JSON.parse(r);}catch(e){}
+  return mem||{ xp:0, lessons:{}, quiz:{}, sim:{}, examBest:0, name:"Chris Lake" }; }
+let P = load();
+function save(){ try{ localStorage.setItem('flipacademy', JSON.stringify(P)); }catch(e){ mem=P; } renderTop(); }
+const $=id=>document.getElementById(id);
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(t){ const el=$('toast'); el.textContent=t; el.style.opacity=1; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity=0,1600); }
+function addXP(n,label){ P.xp+=n; save(); toast(`+${n} XP ${label||''} ⚡`); }
+function rank(){ let r=RANKS[0][1]; RANKS.forEach(([t,n])=>{ if(P.xp>=t) r=n; }); return r; }
+function nextRankAt(){ for(const [t] of RANKS) if(P.xp<t) return t; return null; }
+function maxXP(){ let x=0; COURSE.forEach(m=>{x+=m.lessons.length*10+m.quiz.length*5;}); SCENARIOS.forEach(s=>x+=s.steps.length*10); return x+100; }
+
+// ---------- nav ----------
+function go(name){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+name).classList.add('active'); window.scrollTo(0,0); }
+
+// ---------- top ----------
+function renderTop(){
+  $('rankTag').textContent = rank() + ' · ' + P.xp + ' XP';
+  $('xpbar').style.width = Math.min(100, P.xp/maxXP()*100) + '%';
+}
+
+// ---------- home ----------
+function modProgress(m){
+  const dl = m.lessons.filter((_,i)=>P.lessons[m.id+'_'+i]).length;
+  const qDone = P.quiz[m.id] !== undefined;
+  return { dl, total:m.lessons.length, qDone, pct: Math.round((dl + (qDone?1:0)) / (m.lessons.length+1) * 100) };
+}
+function allModulesDone(){ return COURSE.every(m=>modProgress(m).pct===100); }
+function renderHome(){
+  const nr = nextRankAt();
+  let h = `<h1>The Phone Flip Course</h1>
+  <div class="sub2">${COURSE.length} modules · 2 simulators · 1 final exam · 0 dollars. Finish everything, pass the exam, print your certificate.</div>`;
+  h += `<div class="card"><b>${rank()}</b> — ${P.xp} XP${nr?` · ${nr-P.xp} XP to next rank`:' · MAX RANK 👑'}
+    <div class="progress-sm"><div style="width:${Math.min(100,P.xp/maxXP()*100)}%"></div></div></div>`;
+  COURSE.forEach(m=>{
+    const pr = modProgress(m);
+    h += `<div class="card modcard" onclick="openMod('${m.id}')">
+      <span class="modemoji">${m.emoji}</span>
+      <div style="flex:1"><div class="modtitle">${esc(m.title)}</div>
+      <div class="modmeta">${m.lessons.length} lessons · ${m.quiz.length}-question quiz</div>
+      <div class="progress-sm"><div style="width:${pr.pct}%"></div></div></div>
+      ${pr.pct===100?'<span class="donechip">✓ DONE</span>':`<span class="modmeta">${pr.pct}%</span>`}</div>`;
+  });
+  SCENARIOS.forEach(s=>{
+    const done = P.sim[s.id]!==undefined;
+    h += `<div class="card modcard" onclick="openSim('${s.id}')">
+      <span class="modemoji">${s.emoji}</span>
+      <div style="flex:1"><div class="modtitle">${esc(s.title)}</div>
+      <div class="modmeta">${s.steps.length} live scenarios — practice before real money is on the table</div></div>
+      ${done?`<span class="donechip">✓ ${P.sim[s.id]}/${s.steps.length}</span>`:''}</div>`;
+  });
+  const unlocked = allModulesDone();
+  h += `<div class="card modcard" ${unlocked?`onclick="startExam()"`:''} style="${unlocked?'':'opacity:.55'}">
+    <span class="modemoji">🏆</span>
+    <div style="flex:1"><div class="modtitle">Final Exam & Certificate</div>
+    <div class="modmeta">${unlocked ? '15 questions from everything above · 80% to pass' : '🔒 Unlocks when every module hits 100%'}</div></div>
+    ${P.examBest>=80?`<span class="donechip">✓ PASSED ${P.examBest}%</span>`:''}</div>`;
+  if (P.examBest>=80) h += `<button class="btn good" onclick="renderCert();go('cert')">View my certificate 🎓</button>`;
+  $('screen-home').innerHTML = h;
+}
+
+// ---------- module ----------
+let CURMOD=null;
+function openMod(id){ CURMOD = COURSE.find(m=>m.id===id); renderMod(); go('mod'); }
+function renderMod(){
+  const m=CURMOD, pr=modProgress(m);
+  let h = `<span class="crumb" onclick="go('home')">← All modules</span>
+    <h1>${m.emoji} ${esc(m.title)}</h1>
+    <div class="sub2">${pr.dl}/${m.lessons.length} lessons complete · quiz ${pr.qDone?'done ('+P.quiz[m.id]+'/'+m.quiz.length+')':'waiting'}</div>`;
+  m.lessons.forEach((l,i)=>{
+    const done = P.lessons[m.id+'_'+i];
+    h += `<div class="lesson" id="ls_${i}">
+      <div class="lesson-head" onclick="document.getElementById('ls_${i}').classList.toggle('open')">
+        ${done?'✅':'📖'} ${esc(l.t)} <span class="tick">${done?'':'tap to read'}</span></div>
+      <div class="lesson-body">${l.h}
+        ${done?'' :`<button class="btn" onclick="doneLesson(${i});event.stopPropagation()">Got it — mark complete (+10 XP)</button>`}
+      </div></div>`;
+  });
+  h += `<div class="card" id="quizArea">${quizHTML(m)}</div>`;
+  $('screen-mod').innerHTML = h;
+}
+function doneLesson(i){ P.lessons[CURMOD.id+'_'+i]=true; addXP(10,'lesson'); renderMod(); renderHome(); }
+let QI=0, QSCORE=0, QLOCK=false;
+function quizHTML(m){
+  if (P.quiz[m.id]!==undefined)
+    return `<h2>Quiz complete ✓</h2><p>Best score: <b>${P.quiz[m.id]}/${m.quiz.length}</b></p>
+      <button class="btn ghost" onclick="retakeQuiz()">Retake (no XP, just practice)</button>`;
+  const allRead = m.lessons.every((_,i)=>P.lessons[m.id+'_'+i]);
+  if (!allRead) return `<h2>Module quiz 🔒</h2><p class="sub2">Finish the lessons above to unlock.</p>`;
+  return `<h2>Module quiz</h2><p class="sub2">${m.quiz.length} questions · +5 XP each first-try correct</p>
+    <button class="btn" onclick="startQuiz(false)">Start quiz</button>`;
+}
+function retakeQuiz(){ delete P.quiz[CURMOD.id]; startQuiz(true); }
+let QPRACTICE=false;
+function startQuiz(practice){ QPRACTICE=practice; QI=0; QSCORE=0; renderQ(); }
+function renderQ(){
+  const m=CURMOD, q=m.quiz[QI]; QLOCK=false;
+  let h = `<div class="examq">Question ${QI+1} of ${m.quiz.length}</div><div class="qq">${esc(q.q)}</div>`;
+  q.opts.forEach((o,i)=>{ h+=`<button class="opt" id="opt_${i}" onclick="answer(${i})">${esc(o)}</button>`; });
+  h += `<div class="why" id="why">💡 ${esc(q.why)}</div><div id="nextWrap"></div>`;
+  $('quizArea').innerHTML = h;
+}
+function answer(i){
+  if (QLOCK) return; QLOCK=true;
+  const q=CURMOD.quiz[QI];
+  $('opt_'+q.a).classList.add('correct');
+  if (i===q.a){ QSCORE++; if(!QPRACTICE) addXP(5,'correct'); } else $('opt_'+i).classList.add('wrong');
+  $('why').style.display='block';
+  $('nextWrap').innerHTML = `<button class="btn" onclick="nextQ()">${QI+1<CURMOD.quiz.length?'Next →':'Finish quiz'}</button>`;
+}
+function nextQ(){
+  QI++;
+  if (QI < CURMOD.quiz.length) return renderQ();
+  P.quiz[CURMOD.id]=QSCORE; save();
+  $('quizArea').innerHTML = `<h2>${QSCORE===CURMOD.quiz.length?'Perfect! 🎯':'Quiz done'}</h2>
+    <p>Score: <b>${QSCORE}/${CURMOD.quiz.length}</b>${QSCORE<CURMOD.quiz.length?' — reread the misses; the exam pulls from these.':''}</p>
+    <button class="btn ghost" onclick="retakeQuiz()">Retake for practice</button>
+    <button class="btn" onclick="go('home');renderHome()">Back to course</button>`;
+  renderHome();
+}
+
+// ---------- simulators ----------
+let CURSIM=null, SI=0, SSCORE=0, SLOCK=false;
+function openSim(id){ CURSIM = SCENARIOS.find(s=>s.id===id); SI=0; SSCORE=0; renderSimIntro(); go('sim'); }
+function renderSimIntro(){
+  $('screen-sim').innerHTML = `<span class="crumb" onclick="go('home')">← All modules</span>
+    <h1>${CURSIM.emoji} ${esc(CURSIM.title)}</h1><div class="sub2">${esc(CURSIM.intro)}</div>
+    <button class="btn" onclick="renderStep()">Start ${P.sim[CURSIM.id]!==undefined?'again (practice — no XP)':''}</button>`;
+}
+function renderStep(){
+  const st = CURSIM.steps[SI]; SLOCK=false;
+  let h = `<span class="crumb" onclick="go('home')">← Exit simulator</span>
+    <div class="examq" style="margin-top:12px">Scenario ${SI+1} of ${CURSIM.steps.length} · score ${SSCORE}</div>
+    <div class="card"><div class="qq" style="margin-top:0">${esc(st.text)}</div>`;
+  st.opts.forEach((o,i)=>{ h+=`<button class="opt" id="sopt_${i}" onclick="simAnswer(${i})">${esc(o)}</button>`; });
+  h += `<div class="why" id="swhy">💡 ${esc(st.why)}</div><div id="snext"></div></div>`;
+  $('screen-sim').innerHTML = h;
+}
+function simAnswer(i){
+  if (SLOCK) return; SLOCK=true;
+  const st=CURSIM.steps[SI], first = P.sim[CURSIM.id]===undefined;
+  $('sopt_'+st.a).classList.add('correct');
+  if (i===st.a){ SSCORE++; if(first) addXP(10,'good call'); } else $('sopt_'+i).classList.add('wrong');
+  $('swhy').style.display='block';
+  $('snext').innerHTML = `<button class="btn" onclick="simNext()">${SI+1<CURSIM.steps.length?'Next scenario →':'Finish'}</button>`;
+}
+function simNext(){
+  SI++;
+  if (SI < CURSIM.steps.length) return renderStep();
+  if (P.sim[CURSIM.id]===undefined || SSCORE>P.sim[CURSIM.id]) P.sim[CURSIM.id]=SSCORE;
+  save();
+  $('screen-sim').innerHTML = `<h1>${SSCORE===CURSIM.steps.length?'Flawless run 🏅':'Run complete'}</h1>
+    <div class="card"><div class="bignum">${SSCORE}/${CURSIM.steps.length}</div>
+    <p class="sub2">${SSCORE===CURSIM.steps.length?'You just handled every landmine the streets can throw at you.':'Rerun it until it’s perfect — these are the calls that cost real money.'}</p>
+    <button class="btn ghost" onclick="openSim('${CURSIM.id}')">Run it again</button>
+    <button class="btn" onclick="go('home');renderHome()">Back to course</button></div>`;
+  renderHome();
+}
+
+// ---------- exam ----------
+let EXQ=[], EI=0, ESCORE=0, ELOCK=false;
+function startExam(){
+  const pool=[...EXAM]; EXQ=[];
+  // deterministic-ish shuffle without Math.random dependency issues is fine here; use Math.random (allowed in browser)
+  while (EXQ.length<15 && pool.length) EXQ.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  EI=0; ESCORE=0; renderExamQ(); go('exam');
+}
+function renderExamQ(){
+  const q=EXQ[EI]; ELOCK=false;
+  let h = `<span class="crumb" onclick="go('home')">← Abandon exam</span>
+    <div class="examq" style="margin-top:12px">FINAL EXAM — Question ${EI+1} of ${EXQ.length} · from ${esc(q.mod)}</div>
+    <div class="card"><div class="qq" style="margin-top:0">${esc(q.q)}</div>`;
+  q.opts.forEach((o,i)=>{ h+=`<button class="opt" id="eopt_${i}" onclick="examAnswer(${i})">${esc(o)}</button>`; });
+  h += `<div class="why" id="ewhy">💡 ${esc(q.why)}</div><div id="enext"></div></div>`;
+  $('screen-exam').innerHTML = h;
+}
+function examAnswer(i){
+  if (ELOCK) return; ELOCK=true;
+  const q=EXQ[EI];
+  $('eopt_'+q.a).classList.add('correct');
+  if (i===q.a) ESCORE++; else $('eopt_'+i).classList.add('wrong');
+  $('ewhy').style.display='block';
+  $('enext').innerHTML = `<button class="btn" onclick="examNext()">${EI+1<EXQ.length?'Next →':'See result'}</button>`;
+}
+function examNext(){
+  EI++;
+  if (EI<EXQ.length) return renderExamQ();
+  const pct = Math.round(ESCORE/EXQ.length*100);
+  const passed = pct>=80, firstPass = passed && P.examBest<80;
+  if (pct>P.examBest) P.examBest=pct; save();
+  if (firstPass) addXP(100,'EXAM PASSED');
+  $('screen-exam').innerHTML = `<h1>${passed?'PASSED 🎉':'Not yet'}</h1>
+    <div class="card"><div class="bignum" style="color:${passed?'var(--good)':'var(--bad)'}">${pct}%</div>
+    <p class="sub2">${passed?'That’s a real working knowledge of this business. Go print the proof.':'80% to pass. Reread the modules that got you — every exam question came from a quiz you’ve seen.'}</p>
+    ${passed?`<button class="btn good" onclick="renderCert();go('cert')">Get my certificate 🎓</button>`:''}
+    <button class="btn ghost" onclick="startExam()">${passed?'Retake for a higher score':'Try again'}</button>
+    <button class="btn ghost" onclick="go('home');renderHome()">Back to course</button></div>`;
+  renderHome();
+}
+
+// ---------- certificate ----------
+function renderCert(){
+  const d = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  $('screen-cert').innerHTML = `<span class="crumb" onclick="go('home')">← Back</span>
+    <div style="margin:14px 0"><label style="font-size:12px;color:var(--sub)">Name on certificate</label>
+    <input value="${esc(P.name)}" onchange="P.name=this.value;save();renderCert()" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-1);color:var(--ink);width:240px"></div>
+    <div class="cert">
+      <div style="font-size:34px">🎓</div>
+      <h2>FLIP ACADEMY</h2>
+      <div style="font-size:13px;color:var(--sub);letter-spacing:.15em">CERTIFICATE OF COMPLETION</div>
+      <div class="name">${esc(P.name)}</div>
+      <div style="font-size:14px;color:var(--sub)">has completed all ${COURSE.length} modules, both field simulators,<br>and passed the final examination with a score of <b>${P.examBest}%</b></div>
+      <div style="margin-top:14px;font-size:14px"><b>${rank()}</b> · ${P.xp} XP earned</div>
+      <div class="line"></div>
+      <div style="font-size:12px;color:var(--sub)">Program Director, Lake Family Academy · ${d}</div>
+    </div>
+    <button class="btn" onclick="window.print()">Print / save as PDF</button>`;
+}
+
+// ---------- boot ----------
+function safe(f){ try{ f(); }catch(e){ console.error(e); } }
+safe(renderTop); safe(renderHome);
+</script>
+</body>
+</html>

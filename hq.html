@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip HQ — Chris Lake's Phone Operation</title>
+<style>
+  .viz-root, :root {
+    color-scheme: light;
+    --surface-1:#fcfcfb; --surface-2:#f1f1ef; --card:#ffffff;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#8a897f;
+    --series-1:#2a78d6; --good:#008300; --warning:#c98500; --serious:#e34948;
+    --line:#e3e2dd; --accent:#2a78d6; --accent-soft:#e8f0fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1:#1a1a19; --surface-2:#232322; --card:#242423;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8a897f;
+      --series-1:#3987e5; --good:#3aa53a; --warning:#c98500; --serious:#e66767;
+      --line:#3a3a38; --accent:#3987e5; --accent-soft:#20304a;
+    }
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         background:var(--surface-1); color:var(--text-primary); line-height:1.5; }
+  header { padding:18px 24px 0; max-width:1100px; margin:0 auto; }
+  h1 { font-size:22px; letter-spacing:-0.02em; }
+  .sub { color:var(--text-secondary); font-size:13px; margin-bottom:12px; }
+  nav { display:flex; gap:4px; flex-wrap:wrap; border-bottom:1px solid var(--line); max-width:1100px; margin:0 auto; padding:0 24px; }
+  nav button { background:none; border:none; padding:10px 14px; font-size:14px; font-weight:600; color:var(--text-secondary);
+               cursor:pointer; border-bottom:2px solid transparent; }
+  nav button.active { color:var(--accent); border-bottom-color:var(--accent); }
+  main { max-width:1100px; margin:0 auto; padding:20px 24px 60px; }
+  .tab { display:none; } .tab.active { display:block; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .kpi-label { font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+  .kpi-value { font-size:26px; font-weight:700; margin-top:2px; }
+  .kpi-note { font-size:12px; color:var(--text-muted); }
+  h2 { font-size:16px; margin:18px 0 10px; }
+  h3 { font-size:14px; margin:14px 0 8px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  label { display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin:8px 0 2px; }
+  input, select, textarea { width:100%; padding:8px 10px; font-size:14px; border:1px solid var(--line); border-radius:8px;
+    background:var(--surface-1); color:var(--text-primary); font-family:inherit; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 14px; }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:0 14px; }
+  @media (max-width:700px){ .grid3,.grid4 { grid-template-columns:1fr 1fr; } }
+  button.btn { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:14px;
+    font-weight:600; cursor:pointer; margin-top:12px; }
+  button.btn.secondary { background:var(--surface-2); color:var(--text-primary); border:1px solid var(--line); }
+  button.btn.danger { background:var(--serious); }
+  button.btn.small { padding:5px 10px; font-size:12px; margin-top:0; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:8px 8px; border-bottom:2px solid var(--line); font-size:12px; color:var(--text-secondary);
+       text-transform:uppercase; letter-spacing:0.04em; }
+  td { padding:8px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .chip { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+  .chip.stock { background:var(--accent-soft); color:var(--accent); }
+  .chip.sold { background:color-mix(in srgb, var(--good) 14%, transparent); color:var(--good); }
+  .chip.warn { background:color-mix(in srgb, var(--serious) 12%, transparent); color:var(--serious); }
+  .money { font-variant-numeric:tabular-nums; }
+  .pos { color:var(--good); font-weight:700; } .neg { color:var(--serious); font-weight:700; }
+  .result-box { background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:12px 16px; margin-top:14px; }
+  .result-big { font-size:30px; font-weight:800; color:var(--accent); }
+  .checkrow { display:flex; align-items:flex-start; gap:8px; margin:6px 0; font-size:13px; }
+  .checkrow input { width:auto; margin-top:3px; }
+  .muted { color:var(--text-muted); font-size:12px; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .bar-tip { position:fixed; pointer-events:none; background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:6px 10px; font-size:12px; box-shadow:0 4px 14px rgba(0,0,0,0.15); display:none; z-index:50; }
+  a { color:var(--accent); }
+  .linkbtns { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .linkbtns a { display:inline-block; background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:8px 12px; font-size:13px; font-weight:600; text-decoration:none; color:var(--text-primary); }
+  .tmpl { background:var(--surface-2); border-radius:8px; padding:10px 12px; font-size:13px; margin:8px 0; }
+  #bosPrint { display:none; }
+  @media print {
+    body * { display:none !important; }
+    #bosPrint, #bosPrint * { display:block !important; }
+    #bosPrint { position:absolute; top:0; left:0; width:100%; padding:40px; font-size:14px; color:#000; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Flip HQ</h1>
+  <div class="sub">Chris Lake's phone operation — runs 100% on this computer, $0/month. Data saves in this browser; use Export for backups.</div>
+</header>
+<nav id="nav">
+  <button data-tab="dash" class="active" onclick="showTab('dash',this)">Dashboard</button>
+  <button data-tab="calc" onclick="showTab('calc',this)">Max Offer</button>
+  <button data-tab="inv" onclick="showTab('inv',this)">Inventory</button>
+  <button data-tab="buyers" onclick="showTab('buyers',this)">Buyers</button>
+  <button data-tab="bos" onclick="showTab('bos',this)">Bill of Sale</button>
+  <button data-tab="finder" onclick="showTab('finder',this)">Deal Finder</button>
+  <button data-tab="quote" onclick="showTab('quote',this)">Quote Helper</button>
+</nav>
+<main>
+
+<!-- DASHBOARD -->
+<section class="tab active" id="tab-dash">
+  <div class="cards" id="kpis"></div>
+  <div class="panel">
+    <h2 style="margin-top:0">Profit by month</h2>
+    <div id="chart"></div>
+    <div class="muted" id="chartEmpty" style="display:none">No sold phones yet — profit shows up here as flips close.</div>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">Goal tracker</h2>
+    <label>Monthly profit goal ($)</label>
+    <input type="number" id="goalInput" style="max-width:160px">
+    <div id="goalBarWrap" style="margin-top:10px; background:var(--surface-2); border-radius:999px; height:18px; overflow:hidden;">
+      <div id="goalBar" style="height:100%; width:0%; background:var(--series-1); border-radius:999px;"></div>
+    </div>
+    <div class="muted" id="goalText" style="margin-top:6px"></div>
+  </div>
+  <div class="toolbar">
+    <button class="btn secondary small" onclick="exportJSON()">Export backup (JSON)</button>
+    <button class="btn secondary small" onclick="document.getElementById('importFile').click()">Import backup</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn secondary small" onclick="exportCSV()">Export flips (CSV)</button>
+    <button class="btn secondary small" onclick="loadSample()">Load sample data</button>
+    <button class="btn danger small" onclick="wipe()">Erase everything</button>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="tab" id="tab-calc">
+  <div class="panel">
+    <h2 style="margin-top:0">Max Offer Calculator</h2>
+    <div class="muted">The rule: never pay over the max offer. Walking away is a profit strategy.</div>
+    <div class="grid3">
+      <div><label>Expected sale price ($)</label><input type="number" id="c_sale" value="300"></div>
+      <div><label>Selling fee % (Swappa 3, eBay 13.25, cash/bulk 0)</label><input type="number" id="c_fee" value="0"></div>
+      <div><label>Repairs needed ($)</label><input type="number" id="c_rep" value="0"></div>
+      <div><label>Shipping / supplies ($)</label><input type="number" id="c_ship" value="0"></div>
+      <div><label>Gas / travel ($)</label><input type="number" id="c_gas" value="5"></div>
+      <div><label>Ad cost per deal ($, 0 if organic)</label><input type="number" id="c_ad" value="0"></div>
+      <div><label>Target profit ($)</label><input type="number" id="c_profit" value="75"></div>
+    </div>
+    <div class="result-box">
+      <div class="kpi-label">Max offer</div>
+      <div class="result-big" id="c_max">$—</div>
+      <div class="muted" id="c_detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- INVENTORY -->
+<section class="tab" id="tab-inv">
+  <div class="panel">
+    <h2 style="margin-top:0">Add a phone</h2>
+    <div class="grid4">
+      <div><label>Model</label><input id="p_model" placeholder="iPhone 13 128GB"></div>
+      <div><label>Condition</label><input id="p_cond" placeholder="Cracked back"></div>
+      <div><label>IMEI</label><input id="p_imei" placeholder="15 digits"></div>
+      <div><label>Source</label><input id="p_src" placeholder="FB Marketplace"></div>
+      <div><label>Date bought</label><input type="date" id="p_date"></div>
+      <div><label>Buy price ($)</label><input type="number" id="p_buy"></div>
+      <div><label>Repairs ($)</label><input type="number" id="p_rep" value="0"></div>
+      <div><label>Other costs ($)</label><input type="number" id="p_other" value="0"></div>
+    </div>
+    <h3>Verification — all five, every phone</h3>
+    <div class="checkrow"><input type="checkbox" class="vchk" id="v1"><span>IMEI blacklist &amp; finance check ran clean <a href="#" onclick="imeiLinks(event)">(open checkers)</a></span></div>
+    <div class="checkrow"><input type="checkbox" class="vchk" id="v2"><span>Watched iCloud / Google account signed out &amp; Find My OFF</span></div>
+    <div class="checkrow"><input type="checkbox" class="vchk" id="v3"><span>Seller confirmed paid off &amp; off their account</span></div>
+    <div class="checkrow"><input type="checkbox" class="vchk" id="v4"><span>Photo of seller ID + signed receipt (use Bill of Sale tab)</span></div>
+    <div class="checkrow"><input type="checkbox" class="vchk" id="v5"><span>Function test passed (cameras, mic, port, buttons, Face ID)</span></div>
+    <button class="btn" onclick="addPhone()">Add to inventory</button>
+    <span class="muted" id="addWarn" style="margin-left:10px"></span>
+  </div>
+  <div class="panel">
+    <div class="toolbar">
+      <h2 style="margin:0; flex:1">Inventory &amp; flip log</h2>
+      <select id="invFilter" style="max-width:150px" onchange="renderInv()">
+        <option value="all">All</option><option value="in_stock">In stock</option><option value="sold">Sold</option>
+      </select>
+      <button class="btn secondary small" onclick="copyWTS()">Copy WTS list</button>
+    </div>
+    <div style="overflow-x:auto"><table id="invTable"></table></div>
+  </div>
+</section>
+
+<!-- BUYERS -->
+<section class="tab" id="tab-buyers">
+  <div class="panel">
+    <h2 style="margin-top:0">Add a buyer</h2>
+    <div class="grid4">
+      <div><label>Name</label><input id="b_name"></div>
+      <div><label>Type</label><select id="b_type"><option>Bulk buyer</option><option>Repair shop</option><option>Pawn shop</option><option>Individual</option><option>Online platform</option></select></div>
+      <div><label>Contact (phone/email)</label><input id="b_contact"></div>
+      <div><label>What they buy / notes</label><input id="b_notes" placeholder="iPhones any condition, pays same day"></div>
+    </div>
+    <button class="btn" onclick="addBuyer()">Add buyer</button>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">Buyer network</h2>
+    <div class="muted" style="margin-bottom:8px">Starter leads: SellCell.com (compares dozens of buyback offers), GreenBuyBack, BuyBackWorld, SmartphonesPLUS, plus every local repair shop within 15 minutes. Relationships beat platforms — log every buyer you meet.</div>
+    <div style="overflow-x:auto"><table id="buyerTable"></table></div>
+  </div>
+</section>
+
+<!-- BILL OF SALE -->
+<section class="tab" id="tab-bos">
+  <div class="panel">
+    <h2 style="margin-top:0">Bill of Sale / Purchase Receipt</h2>
+    <div class="muted">Fill it out at the meetup, both sign, snap a photo of their ID. This stack of paper is your legal protection.</div>
+    <div class="grid2">
+      <div><label>Seller full name</label><input id="s_name"></div>
+      <div><label>Seller phone</label><input id="s_phone"></div>
+      <div><label>Device (model, storage, color)</label><input id="s_device"></div>
+      <div><label>IMEI</label><input id="s_imei"></div>
+      <div><label>Price ($)</label><input type="number" id="s_price"></div>
+      <div><label>Date</label><input type="date" id="s_date"></div>
+    </div>
+    <button class="btn" onclick="printBOS()">Print / Save as PDF</button>
+  </div>
+</section>
+
+<!-- DEAL FINDER -->
+<section class="tab" id="tab-finder">
+  <div class="panel">
+    <h2 style="margin-top:0">Deal Finder — the legit sniper</h2>
+    <p class="muted">Paid tools scrape Marketplace 24/7 (against Meta's rules — their risk becomes your account's risk). The free, safe version: saved searches + fast fingers. Open all your hunting grounds in one click, morning and night. In the Facebook app, tap the bell on each search to get instant alerts.</p>
+    <label>Search term</label>
+    <div class="grid3">
+      <div><input id="f_term" value="broken iPhone"></div>
+      <div><button class="btn small" style="margin-top:2px" onclick="openHunts()">Open all marketplaces</button></div>
+    </div>
+    <div class="linkbtns" id="huntLinks"></div>
+    <h3>Fast-reply templates (tap to copy)</h3>
+    <div class="tmpl" onclick="copyText(this)">Hey! Is the phone still available? I can pick up today with cash. Could you send me the IMEI from Settings &gt; General &gt; About so I can verify it first? Thanks!</div>
+    <div class="tmpl" onclick="copyText(this)">Thanks! IMEI checks out. Based on sold listings I can do $___ cash today. I can meet at the police station safe exchange zone whenever works for you.</div>
+    <div class="tmpl" onclick="copyText(this)">Quick heads up before we meet — I'll need you to sign out of iCloud/Google and turn off Find My in front of me, and I do a quick signed receipt with ID. Standard for every phone I buy. See you soon!</div>
+  </div>
+</section>
+
+<!-- QUOTE HELPER -->
+<section class="tab" id="tab-quote">
+  <div class="panel">
+    <h2 style="margin-top:0">Quote Helper</h2>
+    <div class="muted">Their "$300/mo quoting chatbot," except it's you, in 10 seconds. Prices below are editable estimates — update them monthly from SellCell/sold listings.</div>
+    <div class="grid3">
+      <div><label>Model</label><select id="q_model"></select></div>
+      <div><label>Condition</label><select id="q_cond">
+        <option value="1">Good / like new</option><option value="0.8">Fair (scuffs)</option>
+        <option value="0.55">Cracked glass, works</option><option value="0.35">Heavy damage, works</option>
+      </select></div>
+      <div><label>Your target margin ($)</label><input type="number" id="q_margin" value="75"></div>
+    </div>
+    <div class="result-box">
+      <div class="kpi-label">Offer</div>
+      <div class="result-big" id="q_offer">$—</div>
+      <div class="muted" id="q_text"></div>
+      <button class="btn small secondary" style="margin-top:8px" onclick="copyQuote()">Copy quote message</button>
+    </div>
+    <h3>Price table (edit anytime — saves automatically)</h3>
+    <div style="overflow-x:auto"><table id="priceTable"></table></div>
+  </div>
+</section>
+</main>
+
+<div class="bar-tip" id="tip"></div>
+
+<div id="bosPrint">
+  <h2 style="margin-bottom:16px">BILL OF SALE — USED MOBILE DEVICE</h2>
+  <p id="bp_body" style="margin-bottom:24px"></p>
+  <p style="margin-bottom:8px">The seller certifies that: (1) they are the lawful owner of the device described above; (2) the device is fully paid off, not attached to any carrier financing plan or account balance; (3) the device is not lost, stolen, or subject to any claim; and (4) all accounts (iCloud / Google) have been removed and Find My has been disabled.</p>
+  <br><br>
+  <p>Seller signature: ______________________________&nbsp;&nbsp;&nbsp;Date: ______________</p><br>
+  <p>Buyer signature: ______________________________&nbsp;&nbsp;&nbsp;Date: ______________</p><br>
+  <p style="font-size:11px; color:#444">Seller photo ID verified at time of sale. This document was signed in person at a public meeting location.</p>
+</div>
+
+<script>
+// ---------- storage (guarded; falls back to memory) ----------
+let mem = null;
+function loadState(){
+  try { const raw = localStorage.getItem('fliphq'); if (raw) return JSON.parse(raw); } catch(e){}
+  return mem || { phones:[], buyers:[], goal:2500, prices:{
+    "iPhone 12 (64GB)":180, "iPhone 13 (128GB)":300, "iPhone 14 (128GB)":380,
+    "iPhone 14 Pro (128GB)":550, "iPhone 15 (128GB)":480, "Galaxy S22":200, "Galaxy S23":300 } };
+}
+function save(){ try { localStorage.setItem('fliphq', JSON.stringify(S)); } catch(e){ mem = S; } renderAll(); }
+let S = loadState();
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const money = n => '$' + Math.round(n).toLocaleString();
+const num = id => parseFloat($(id).value) || 0;
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ---------- tabs ----------
+function showTab(name, btn){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const el = document.getElementById('tab-' + name);
+  if (el) el.classList.add('active');
+}
+document.getElementById('nav').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]');
+  if (b) showTab(b.dataset.tab, b);
+});
+
+// ---------- calculator ----------
+function calc(){
+  const net = num('c_sale') * (1 - num('c_fee')/100);
+  const costs = num('c_rep') + num('c_ship') + num('c_gas') + num('c_ad');
+  const max = net - costs - num('c_profit');
+  $('c_max').textContent = money(max);
+  $('c_max').style.color = max > 0 ? 'var(--accent)' : 'var(--serious)';
+  $('c_detail').textContent = `You'd receive ${money(net)} after fees · costs ${money(costs)} · break-even buy price ${money(net-costs)}` + (max<=0 ? ' — this deal cannot hit your target profit.' : '');
+}
+['c_sale','c_fee','c_rep','c_ship','c_gas','c_ad','c_profit'].forEach(id => $(id).addEventListener('input', calc));
+
+// ---------- inventory ----------
+function addPhone(){
+  const checks = [...document.querySelectorAll('.vchk')].filter(c=>c.checked).length;
+  if (!$('p_model').value || !num('p_buy')) { $('addWarn').textContent = 'Model and buy price required.'; return; }
+  if (checks < 5) { $('addWarn').textContent = `Only ${checks}/5 verification checks done — added, but flagged. Protect yourself!`; }
+  else $('addWarn').textContent = '';
+  S.phones.push({ id: Date.now(), model:$('p_model').value, cond:$('p_cond').value, imei:$('p_imei').value,
+    src:$('p_src').value, date:$('p_date').value || new Date().toISOString().slice(0,10),
+    buy:num('p_buy'), rep:num('p_rep'), other:num('p_other'), checks, status:'in_stock',
+    soldDate:null, channel:null, sale:0, fees:0 });
+  ['p_model','p_cond','p_imei','p_src','p_buy'].forEach(id=>$(id).value='');
+  $('p_rep').value = 0; $('p_other').value = 0;
+  document.querySelectorAll('.vchk').forEach(c=>c.checked=false);
+  save();
+}
+function markSold(id){
+  const p = S.phones.find(x=>x.id===id); if(!p) return;
+  const sale = parseFloat(prompt('Sale price ($):')); if (isNaN(sale)) return;
+  const fees = parseFloat(prompt('Selling fees ($, 0 for cash/bulk):','0')) || 0;
+  const channel = prompt('Sold via (Bulk buyer / Swappa / eBay / FB local):','Bulk buyer') || '';
+  p.sale = sale; p.fees = fees; p.channel = channel; p.status = 'sold';
+  p.soldDate = new Date().toISOString().slice(0,10);
+  save();
+}
+function delPhone(id){ if(confirm('Delete this phone?')) { S.phones = S.phones.filter(x=>x.id!==id); save(); } }
+function profit(p){ return p.status==='sold' ? p.sale - p.fees - p.buy - p.rep - p.other : null; }
+function renderInv(){
+  const f = $('invFilter').value;
+  const rows = S.phones.filter(p => f==='all' || p.status===f);
+  let h = '<tr><th>Date</th><th>Model</th><th>Cond.</th><th>Src</th><th>Verified</th><th>Cost</th><th>Status</th><th>Sold</th><th>Profit</th><th></th></tr>';
+  rows.slice().reverse().forEach(p => {
+    const cost = p.buy + p.rep + p.other, pr = profit(p);
+    h += `<tr><td>${esc(p.date)}</td><td><b>${esc(p.model)}</b><div class="muted">${esc(p.imei)}</div></td>
+      <td>${esc(p.cond)}</td><td>${esc(p.src)}</td>
+      <td>${p.checks>=5?'<span class="chip stock">5/5</span>':`<span class="chip warn">${p.checks}/5</span>`}</td>
+      <td class="money">${money(cost)}</td>
+      <td>${p.status==='sold'?'<span class="chip sold">Sold</span>':'<span class="chip stock">In stock</span>'}</td>
+      <td class="money">${p.status==='sold'?money(p.sale)+`<div class="muted">${esc(p.channel)}</div>`:'—'}</td>
+      <td class="money">${pr===null?'—':`<span class="${pr>=0?'pos':'neg'}">${money(pr)}</span>`}</td>
+      <td>${p.status!=='sold'?`<button class="btn small" onclick="markSold(${p.id})">Sold</button> `:''}<button class="btn small secondary" onclick="delPhone(${p.id})">✕</button></td></tr>`;
+  });
+  if (!rows.length) h += '<tr><td colspan="10" class="muted">Nothing here yet.</td></tr>';
+  $('invTable').innerHTML = h;
+}
+function copyWTS(){
+  const stock = S.phones.filter(p=>p.status==='in_stock');
+  if (!stock.length) return alert('No phones in stock.');
+  const txt = 'AVAILABLE PHONES — Chris Lake (786-309-0134)\n' +
+    stock.map(p=>`• ${p.model} — ${p.cond||'good'} — asking $${Math.round((p.buy+p.rep+p.other)*1.5)}`).join('\n') +
+    '\nAll IMEIs verified clean. Cash or bulk offers welcome.';
+  navigator.clipboard.writeText(txt).then(()=>alert('WTS list copied — paste it to any buyer.'));
+}
+function imeiLinks(e){
+  e.preventDefault();
+  const imei = $('p_imei').value.trim();
+  window.open('https://www.swappa.com/esn','_blank');
+  window.open('https://www.checkmend.com/us/','_blank');
+  if (imei) navigator.clipboard.writeText(imei);
+}
+
+// ---------- buyers ----------
+function addBuyer(){
+  if (!$('b_name').value) return;
+  S.buyers.push({ id:Date.now(), name:$('b_name').value, type:$('b_type').value, contact:$('b_contact').value, notes:$('b_notes').value, deals:0 });
+  ['b_name','b_contact','b_notes'].forEach(id=>$(id).value='');
+  save();
+}
+function bumpBuyer(id){ const b=S.buyers.find(x=>x.id===id); if(b){ b.deals++; save(); } }
+function delBuyer(id){ S.buyers = S.buyers.filter(x=>x.id!==id); save(); }
+function renderBuyers(){
+  let h = '<tr><th>Name</th><th>Type</th><th>Contact</th><th>Notes</th><th>Deals</th><th></th></tr>';
+  S.buyers.forEach(b => {
+    h += `<tr><td><b>${esc(b.name)}</b></td><td>${esc(b.type)}</td><td>${esc(b.contact)}</td><td>${esc(b.notes)}</td>
+      <td>${b.deals}</td><td><button class="btn small secondary" onclick="bumpBuyer(${b.id})">+1 deal</button>
+      <button class="btn small secondary" onclick="delBuyer(${b.id})">✕</button></td></tr>`;
+  });
+  if (!S.buyers.length) h += '<tr><td colspan="6" class="muted">No buyers logged yet.</td></tr>';
+  $('buyerTable').innerHTML = h;
+}
+
+// ---------- bill of sale ----------
+function printBOS(){
+  const d = $('s_date').value || new Date().toISOString().slice(0,10);
+  $('bp_body').innerHTML = `I, <b>${esc($('s_name').value||'____________________')}</b> (phone: ${esc($('s_phone').value||'______________')}), sell the following device to <b>Christopher Lake</b> for <b>$${esc($('s_price').value||'________')}</b> cash, received in full on <b>${esc(d)}</b>:<br><br>Device: <b>${esc($('s_device').value||'____________________')}</b><br>IMEI: <b>${esc($('s_imei').value||'____________________')}</b>`;
+  window.print();
+}
+
+// ---------- deal finder ----------
+function huntURLs(term){
+  const t = encodeURIComponent(term);
+  return [
+    ['FB Marketplace', `https://www.facebook.com/marketplace/search/?query=${t}`],
+    ['OfferUp', `https://offerup.com/search?q=${t}`],
+    ['Craigslist Houston', `https://houston.craigslist.org/search/moa?query=${t}`],
+    ['eBay sold comps', `https://www.ebay.com/sch/i.html?_nkw=${t}&LH_Sold=1&LH_Complete=1`],
+  ];
+}
+function renderHunts(){
+  $('huntLinks').innerHTML = huntURLs($('f_term').value).map(([n,u])=>`<a href="${u}" target="_blank">${n} ↗</a>`).join('');
+}
+$('f_term').addEventListener('input', renderHunts);
+function openHunts(){ huntURLs($('f_term').value).forEach(([n,u])=>window.open(u,'_blank')); }
+function copyText(el){ navigator.clipboard.writeText(el.textContent.trim()).then(()=>{ el.style.outline='2px solid var(--good)'; setTimeout(()=>el.style.outline='',600); }); }
+
+// ---------- quote helper ----------
+function renderPrices(){
+  const sel = $('q_model'); const cur = sel.value;
+  sel.innerHTML = Object.keys(S.prices).map(m=>`<option${m===cur?' selected':''}>${esc(m)}</option>`).join('');
+  let h = '<tr><th>Model</th><th>Good-condition sale price ($)</th></tr>';
+  Object.entries(S.prices).forEach(([m,v])=>{
+    h += `<tr><td>${esc(m)}</td><td><input type="number" value="${v}" style="max-width:120px" onchange="S.prices['${esc(m)}']=parseFloat(this.value)||0; save();"></td></tr>`;
+  });
+  $('priceTable').innerHTML = h;
+  quote();
+}
+function quote(){
+  const base = S.prices[$('q_model').value] || 0;
+  const mult = parseFloat($('q_cond').value);
+  const saleEst = base * mult;
+  const offer = Math.max(0, Math.floor((saleEst - 5 - num('q_margin')) / 5) * 5);
+  $('q_offer').textContent = money(offer);
+  $('q_text').textContent = `Est. resale ${money(saleEst)} in this condition · your margin ${money(num('q_margin'))}`;
+  window._quoteMsg = `Hi! Based on current sold prices for the ${$('q_model').value} in that condition, I can offer $${offer} cash today. I verify the IMEI and we meet at a safe exchange spot — quick and easy. Work for you?`;
+}
+['q_cond','q_margin'].forEach(id=>$(id).addEventListener('input', quote));
+$('q_model').addEventListener('change', quote);
+function copyQuote(){ navigator.clipboard.writeText(window._quoteMsg||''); alert('Quote copied.'); }
+
+// ---------- dashboard ----------
+function renderKPIs(){
+  const sold = S.phones.filter(p=>p.status==='sold');
+  const stock = S.phones.filter(p=>p.status!=='sold');
+  const totalProfit = sold.reduce((s,p)=>s+profit(p),0);
+  const cashIn = stock.reduce((s,p)=>s+p.buy+p.rep+p.other,0);
+  const avgP = sold.length ? totalProfit/sold.length : 0;
+  const avgDays = sold.length ? sold.reduce((s,p)=>s+Math.max(0,(new Date(p.soldDate)-new Date(p.date))/86400000),0)/sold.length : 0;
+  const mo = new Date().toISOString().slice(0,7);
+  const moProfit = sold.filter(p=>(p.soldDate||'').slice(0,7)===mo).reduce((s,p)=>s+profit(p),0);
+  $('kpis').innerHTML = `
+    <div class="card"><div class="kpi-label">Profit this month</div><div class="kpi-value ${moProfit>=0?'pos':'neg'}">${money(moProfit)}</div><div class="kpi-note">goal ${money(S.goal)}</div></div>
+    <div class="card"><div class="kpi-label">All-time profit</div><div class="kpi-value">${money(totalProfit)}</div><div class="kpi-note">${sold.length} phones sold</div></div>
+    <div class="card"><div class="kpi-label">Avg profit / phone</div><div class="kpi-value">${money(avgP)}</div><div class="kpi-note">target $75+</div></div>
+    <div class="card"><div class="kpi-label">Cash in inventory</div><div class="kpi-value">${money(cashIn)}</div><div class="kpi-note">${stock.length} phones in stock</div></div>
+    <div class="card"><div class="kpi-label">Avg days to sell</div><div class="kpi-value">${avgDays?avgDays.toFixed(1):'—'}</div><div class="kpi-note">target &lt; 7</div></div>`;
+  $('goalInput').value = S.goal;
+  const pct = Math.min(100, S.goal? (moProfit/S.goal*100) : 0);
+  $('goalBar').style.width = pct + '%';
+  $('goalText').textContent = `${money(moProfit)} of ${money(S.goal)} (${pct.toFixed(0)}%) — ${moProfit>=S.goal?'GOAL HIT 🎉':money(S.goal-moProfit)+' to go'}`;
+}
+$('goalInput').addEventListener('change', ()=>{ S.goal = num('goalInput'); save(); });
+
+function renderChart(){
+  const sold = S.phones.filter(p=>p.status==='sold' && p.soldDate);
+  const byMo = {};
+  sold.forEach(p=>{ const m=(p.soldDate||'').slice(0,7); byMo[m]=(byMo[m]||0)+profit(p); });
+  const months = Object.keys(byMo).sort().slice(-12);
+  if (!months.length){ $('chart').innerHTML=''; $('chartEmpty').style.display='block'; return; }
+  $('chartEmpty').style.display='none';
+  const W=Math.max(320, months.length*70), H=200, PAD=28;
+  const maxV = Math.max(...months.map(m=>byMo[m]), 1);
+  let svg = `<svg width="100%" viewBox="0 0 ${W} ${H+30}" style="max-width:${W}px">`;
+  months.forEach((m,i)=>{
+    const v = byMo[m], bh = Math.max(2,(v/maxV)*(H-PAD)), x = i*70+15, y = H-bh;
+    svg += `<rect x="${x}" y="${y}" width="40" height="${bh}" rx="4" fill="var(--series-1)"
+      data-m="${m}" data-v="${v}" class="bar"/>`;
+    svg += `<text x="${x+20}" y="${y-6}" text-anchor="middle" font-size="11" fill="var(--text-secondary)">${money(v)}</text>`;
+    svg += `<text x="${x+20}" y="${H+16}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${m.slice(5)}/${m.slice(2,4)}</text>`;
+  });
+  svg += `<line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="var(--line)" stroke-width="1"/></svg>`;
+  $('chart').innerHTML = svg;
+  document.querySelectorAll('.bar').forEach(b=>{
+    b.addEventListener('mousemove', e=>{ const t=$('tip'); t.style.display='block';
+      t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-10)+'px';
+      t.textContent = `${b.dataset.m}: ${money(parseFloat(b.dataset.v))} profit`; });
+    b.addEventListener('mouseleave', ()=>$('tip').style.display='none');
+  });
+}
+
+// ---------- data ----------
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'fliphq-backup.json'; a.click();
+}
+function importJSON(ev){
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { S = JSON.parse(r.result); save(); alert('Backup restored.'); } catch(e){ alert('Not a valid backup file.'); } };
+  r.readAsText(f);
+}
+function exportCSV(){
+  const rows = [['Date','Model','Condition','IMEI','Source','Buy','Repairs','Other','Status','SoldDate','Channel','Sale','Fees','Profit']];
+  S.phones.forEach(p=>rows.push([p.date,p.model,p.cond,p.imei,p.src,p.buy,p.rep,p.other,p.status,p.soldDate||'',p.channel||'',p.sale||'',p.fees||'',profit(p)??'']));
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'fliphq-flips.csv'; a.click();
+}
+function loadSample(){
+  const today = new Date(), iso = d=>d.toISOString().slice(0,10);
+  const ago = n=>{ const d=new Date(today); d.setDate(d.getDate()-n); return iso(d); };
+  S.phones.push(
+    {id:1,model:'iPhone 13 128GB',cond:'Cracked back',imei:'35X-SAMPLE-01',src:'FB Marketplace',date:ago(24),buy:140,rep:0,other:5,checks:5,status:'sold',soldDate:ago(21),channel:'Bulk buyer',sale:240,fees:0},
+    {id:2,model:'iPhone 14 128GB',cond:'Good',imei:'35X-SAMPLE-02',src:'OfferUp',date:ago(12),buy:250,rep:0,other:5,checks:5,status:'sold',soldDate:ago(7),channel:'Swappa',sale:385,fees:12},
+    {id:3,model:'Galaxy S23',cond:'Scuffed frame',imei:'35X-SAMPLE-03',src:'FB Marketplace',date:ago(2),buy:170,rep:0,other:5,checks:5,status:'in_stock',soldDate:null,channel:null,sale:0,fees:0});
+  S.buyers.push({id:1,name:'SellCell (compare)',type:'Online platform',contact:'sellcell.com',notes:'Always check here before buying — shows real wholesale price',deals:0});
+  save();
+}
+function wipe(){ if(confirm('Erase ALL data? Export a backup first!')) { S={phones:[],buyers:[],goal:2500,prices:S.prices}; save(); } }
+
+// ---------- render all ----------
+function safe(f){ try { f(); } catch(e) { console.error(e); } }
+function renderAll(){ [renderKPIs, renderChart, renderInv, renderBuyers, renderPrices, renderHunts].forEach(safe); }
+safe(calc); renderAll();
+$('p_date').value = new Date().toISOString().slice(0,10);
+$('s_date').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
